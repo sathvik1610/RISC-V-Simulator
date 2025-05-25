@@ -1,0 +1,21 @@
+# ninja log v6
+10	801	7616178769035547	CMakeFiles/project_coa.dir/main.cpp.obj	869e926601e7dc1d
+13	1254	7616178769055693	CMakeFiles/project_coa.dir/simulator.cpp.obj	edde97967135733
+4	2811	7616178768970853	CMakeFiles/project_coa.dir/core.cpp.obj	75d750d1e166b789
+2811	5304	7616178797046904	project_coa.exe	57c5398cc1b5443b
+10	577	7616633358874125	CMakeFiles/project_coa.dir/main.cpp.obj	82ba4d1333745ee4
+14	958	7616633358924101	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+6	2327	7616633358834114	CMakeFiles/project_coa.dir/core.cpp.obj	e4921b79ac50f883
+2327	4085	7616633382044443	project_coa.exe	57c5398cc1b5443b
+58	876	7616833790099338	CMakeFiles/project_coa.dir/main.cpp.obj	82ba4d1333745ee4
+62	1297	7616833790129356	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+52	3032	7616833790026883	CMakeFiles/project_coa.dir/core.cpp.obj	e4921b79ac50f883
+3032	6311	7616833819835417	project_coa.exe	57c5398cc1b5443b
+12	853	7617484473334695	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+854	3020	7617484481758587	project_coa.exe	57c5398cc1b5443b
+4	835	7617506390710394	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+835	2907	7617506399006646	project_coa.exe	57c5398cc1b5443b
+5	776	7617527032569037	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+776	2638	7617527040279280	project_coa.exe	57c5398cc1b5443b
+6	842	7617531032648301	CMakeFiles/project_coa.dir/simulator.cpp.obj	b3f1fdac4250b148
+842	2625	7617531041016096	project_coa.exe	57c5398cc1b5443b

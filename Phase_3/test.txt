@@ -1,0 +1,8 @@
+.data
+arr: .word 1,2,3,4,5
+
+.text
+addi x1,x2,12
+addi x8,x0,600
+lw x3,0(x1)
+sw x1,0(x8)

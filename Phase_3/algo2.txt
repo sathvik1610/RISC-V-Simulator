@@ -1,0 +1,50 @@
+    #-----------------------------
+    # Registers:
+    # x0 = 0
+    # x1 = array base pointer
+    # x2 = fill‐loop counter (i)
+    # x3 = limit (100)
+    # x4 = SPM pointer
+    # x5 = outer loop counter (cnt)
+    # x6 = inner loop counter (i)
+    # x7 = accumulator sum
+    # x8 = loaded value
+    #-----------------------------
+
+    addi  x1, x0, 0        # x1 ← base of array
+    addi  x3, x0, 5      # x3 ← limit = 100
+
+    # 1) Fill scratchpad
+    addi  x2, x0, 0        # i = 0
+    addi  x4, x0, 0        # spm_ptr = SPM base
+
+fill:
+    lw    x8, 0(x1)        # x8 = array[i*X]
+    sw_spm x8, 0(x4)       # SPM[i] = x8
+    addi  x1, x1, 400      # array ptr += 400
+    addi  x4, x4, 4        # spm_ptr += 4 bytes
+    addi  x2, x2, 1        # i++
+    blt   x2, x3, fill     # repeat until i = 100
+
+    # 2) Use scratchpad
+    addi  x7, x0, 0        # sum = 0
+    addi  x5, x0, 0        # cnt = 0
+
+outer2:
+    addi  x6, x0, 0        # i = 0
+    addi  x4, x0, 0        # spm_ptr = SPM base
+
+inner2:
+    lw_spm x8, 0(x4)       # x8 = SPM[i]
+    add   x7, x7, x8       # sum += x8
+    addi  x6, x6, 1        # i++
+    addi  x4, x4, 4        # spm_ptr += 4
+    blt   x6, x3, inner2   # repeat inner
+
+    addi  x5, x5, 1        # cnt++
+    blt   x5, x3, outer2   # repeat outer
+
+    # final sum in x7
+    addi  x10, x0, 0
+    add   x10, x10, x7
+    halt

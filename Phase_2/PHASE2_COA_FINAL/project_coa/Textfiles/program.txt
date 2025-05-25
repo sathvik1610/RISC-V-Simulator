@@ -1,0 +1,49 @@
+.data
+array: .word 5,10,15,20,25
+result: .word 0
+fact: .word 0
+.text
+.globl main
+main:
+ addi x1, x0, 10  # li x1,10
+ addi x2, x0, 3   # li x2,3
+ add x3, x1, x2   # x3 = x1 + x2
+ sub x4, x1, x2   # x4 = x1 - x2
+ mul x5, x1, x2   # x5 = x1 * x2
+ addi x6, x0, 5   # li x6,5
+ slt x7, x2, x1   # x7 = (x2 < x1) ? 1 : 0
+ sw x3, 0(x0)     # Store x3 at memory address 0
+ lw x8, 0(x0)     # Load memory at address 0 into x8
+ addi x9, x0, 0   # li x9,0 (sum accumulator)
+ addi x10, x0, 0  # li x10,0 (loop index)
+ addi x11, x0, 5  # li x11,5 (loop limit)
+ la x12, array    # Load address of array into x12
+sum_loop:
+ blt x10, x11, sum_cont  # if x10 < x11, go to sum_cont
+ jal sum_end             # otherwise, jump to sum_end
+sum_cont:
+ addi x14, x0, 4         # li x14,4 (word size)
+ mul x15, x10, x14       # x15 = x10 * 4 (offset)
+ add x15, x12, x15       # x15 = base + offset
+ lw x16, 0(x15)          # Load word from array[x10]
+ add x9, x9, x16         # sum += array[x10]
+ addi x10, x10, 1        # i++
+ jal sum_loop            # Repeat loop
+sum_end:
+ sw x9, result           # Store sum in result
+ addi x17, x0, 5         # li x17,5 (factorial input)
+ jal fact_sub            # Call factorial function
+main_continue:
+ sw x18, fact            # Store factorial result
+ halt                    # Stop execution
+fact_sub:
+ addi x18, x0, 1         # li x18,1 (initialize factorial result)
+fact_loop:
+ addi x19, x0, 2         # li x19,2
+ slt x20, x17, x19       # if x17 < 2, set x20 = 1
+ bne x20, x0, fact_done  # if x20 != 0, go to fact_done
+ mul x18, x18, x17       # x18 *= x17
+ addi x17, x17, -1       # x17--
+ jal fact_loop           # Repeat loop
+fact_done:
+ jal main_continue       # Return to main

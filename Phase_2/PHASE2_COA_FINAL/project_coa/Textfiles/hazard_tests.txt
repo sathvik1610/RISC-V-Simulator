@@ -1,0 +1,7 @@
+.data
+
+
+.text
+addi x1, x0, 5       # x1 = 5. All cores fetch and execute.
+mul x2, x1, x1       # x2 = x1 * x1. With a latency of 3, it will stall for 2 cycles in execute.
+addi x3, x2, 10      # x3 = x2 + 10. This runs only after the mul finishes.

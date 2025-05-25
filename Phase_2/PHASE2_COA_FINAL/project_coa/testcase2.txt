@@ -1,0 +1,87 @@
+.data
+array:      .word 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
+
+partialSums: .word 0, 0, 0, 0
+finalSum:    .word 0
+
+    .text
+    .globl main
+
+main:
+    #--------------------------------------------------------------
+    # Compute slice offset = (x31 * 25) * 4.
+    # (Each core processes 25 elements; each element is 4 bytes.)
+    #--------------------------------------------------------------
+    addi    x1, x31, 0       # x1 = core id
+    addi    x2, x0, 25       # x2 = 25
+    mul     x3, x1, x2       # x3 = core_id * 25
+    addi    x4, x0, 4        # x4 = 4
+    mul     x3, x3, x4       # x3 = (core_id * 25) * 4
+
+    #--------------------------------------------------------------
+    # Compute segment offset = (x31 * 1024).
+    # Each core has access to 1024 bytes.
+    #--------------------------------------------------------------
+    addi    x11, x0, 1024    # x11 = 1024
+    mul     x12, x31, x11    # x12 = core_id * 1024
+
+    #--------------------------------------------------------------
+    # Set pointer x5 = base address of array + segment offset + slice offset.
+    # This makes each core access its own 1024-byte region.
+    #--------------------------------------------------------------
+    la      x5, array        # x5 = global base address of array
+    add     x5, x5, x12      # x5 = array base + (core_id * 1024)
+    add     x5, x5, x3       # x5 = starting address for this core’s slice
+
+    #--------------------------------------------------------------
+    # Compute partial sum for 25 elements.
+    # x6 = loop counter (25), x7 = accumulator.
+    #--------------------------------------------------------------
+    addi    x6, x0, 25       # x6 = 25
+    addi    x7, x0, 0        # x7 = 0
+Loop:
+    bne     x6, x0, Lbody    # if x6 != 0, branch to Lbody
+    jal     x0, LoopDone     # else, jump to LoopDone
+Lbody:
+    lw      x8, 0(x5)        # x8 = element from array
+    add     x7, x7, x8       # x7 = x7 + x8
+    addi    x5, x5, 4        # advance pointer by 4
+    addi    x6, x6, -1       # decrement counter
+    jal     x0, Loop         # repeat loop
+LoopDone:
+    #--------------------------------------------------------------
+    # Store partial sum into partialSums.
+    # Since la returns a local address in the core’s segment,
+    # subtract the segment offset (x12) to get the global base.
+    # Then add (core_id * 4) to index the word.
+    #--------------------------------------------------------------
+    la      x9, partialSums  # x9 = local address of partialSums
+    add     x9, x9, x12      # adjust to global base of partialSums
+    mul     x1, x31, x4      # x1 = core_id * 4
+    add     x9, x9, x1       # x9 = address of partialSums[core_id]
+    sw      x7, 0(x9)        # store partial sum
+
+
+
+    addi    x13, x0, 0       # x13 = 0 (final sum accumulator)
+    la      x9, partialSums  # x9 = local address of partialSums
+    addi    x14,x0,1024
+    addi    x6, x0, 4        # x6 = 4 (counter)
+SumLoop:
+    bne     x6, x0, Sbody    # if counter != 0, branch to Sbody
+    jal     x0, SumDone      # else, jump to SumDone
+Sbody:
+    lw      x8, 0(x9)        # x8 = load one partial sum
+    add     x13, x13, x8     # add it to final sum accumulator
+    add     x9, x9, x14
+    addi    x9, x9, 4        # move pointer to next partial sum
+    addi    x6, x6, -1       # decrement counter
+    jal     x0, SumLoop      # repeat loop
+
+SumDone:
+    beq x31,1,label
+    halt
+label:
+   la x15,finalSum
+   add x15,x15,x12
+   sw x13,0(x15)

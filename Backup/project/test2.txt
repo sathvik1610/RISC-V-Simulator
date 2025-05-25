@@ -1,0 +1,9 @@
+
+
+.text
+addi x9,x5,2000
+add x2,x1,x1
+lw x5,0(x9)
+sw x5,0(x9)
+
+

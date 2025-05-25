@@ -1,0 +1,23 @@
+.data
+array: .word 1,2,3
+len: .word 3
+.text
+addi x1,x0,3
+addi x2,x0,4
+add x3,x1,x2
+sub x5,x3,x1
+addi x6,x0,100
+sw x5,0(x6)
+lw x7,0(x6)
+slt x15,x1,x2
+blt x2,x1,exit
+la x11,len
+jal x9,subroutine
+addi x8,x8,1
+
+subroutine:
+  addi x20,x0,20
+  jal x0,exit
+
+exit:
+addi x8,x8,2

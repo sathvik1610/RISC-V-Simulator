@@ -1,0 +1,3 @@
+C:/Users/pilya/OneDrive/Desktop/Final_final_2/Final_final/project_coa/cmake-build-debug/CMakeFiles/project_coa.dir
+C:/Users/pilya/OneDrive/Desktop/Final_final_2/Final_final/project_coa/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/pilya/OneDrive/Desktop/Final_final_2/Final_final/project_coa/cmake-build-debug/CMakeFiles/rebuild_cache.dir

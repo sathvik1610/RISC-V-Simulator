@@ -1,0 +1,106 @@
+.data
+# Define an array of 100 elements. For simplicity, here we use the numbers 1 through 100.
+array:    .word 1,2,3,4,5,6,7,8,9,10, 11,12,13,14,15,16,17,18,19,20, 21,22,23,24,25, 
+          26,27,28,29,30, 31,32,33,34,35,36,37,38,39,40, 41,42,43,44,45,46,47,48,49,50, 
+          51,52,53,54,55,56,57,58,59,60, 61,62,63,64,65,66,67,68,69,70, 71,72,73,74,75, 
+          76,77,78,79,80, 81,82,83,84,85,86,87,88,89,90, 91,92,93,94,95,96,97,98,99,100
+
+# Reserve space for partial sums for each core:
+sum0:     .word 0
+sum1:     .word 0
+sum2:     .word 0
+sum3:     .word 0
+
+# Reserve space for the final sum.
+finalSum: .word 0
+
+.text
+.globl main
+main:
+    # Assume each core has its unique core ID in register x31 (CID).
+    # Calculate start index for the array segment:
+    li   x20, 25          # x20 = 25 (number of elements per core)
+    mul  x5, x31, x20     # x5 = start index = CID * 25
+
+    # Calculate end index = start index + 25.
+    add  x6, x5, x20      # x6 = end index
+
+    # Initialize local sum register (x7) to 0.
+    li   x7, 0
+
+    # Set loop counter: use x8 for current index; initialize x8 = x5.
+    add  x8, x5, x0
+
+loop:
+    # If current index (x8) is >= end index (x6), exit loop.
+    bge  x8, x6, loop_end
+
+    # Compute address of array[x8]:
+    la   x9, array       # x9 = base address of array
+    slli x10, x8, 2       # Multiply x8 by 4 to get the byte offset
+    add  x9, x9, x10     # x9 = address of array[x8]
+
+    # Load the array element and add it to the local sum:
+    lw   x11, 0(x9)      # x11 = array[x8]
+    add  x7, x7, x11     # local sum += array[x8]
+
+    # Increment loop counter and repeat:
+    addi x8, x8, 1
+    j    loop
+
+loop_end:
+    # Store the partial sum into the appropriate memory location based on CID.
+    li   x12, 0
+    beq  x31, x12, store0   # If CID == 0, go to store0
+    li   x12, 1
+    beq  x31, x12, store1   # If CID == 1, go to store1
+    li   x12, 2
+    beq  x31, x12, store2   # If CID == 2, go to store2
+    li   x12, 3
+    beq  x31, x12, store3   # If CID == 3, go to store3
+
+store0:
+    la   x13, sum0
+    sw   x7, 0(x13)
+    j    done_partial
+
+store1:
+    la   x13, sum1
+    sw   x7, 0(x13)
+    j    done_partial
+
+store2:
+    la   x13, sum2
+    sw   x7, 0(x13)
+    j    done_partial
+
+store3:
+    la   x13, sum3
+    sw   x7, 0(x13)
+
+done_partial:
+    # Now, only one compute unit (for example, the one with CID == 1) aggregates the results.
+    li   x12, 1
+    bne  x31, x12, finish   # If not core 1, jump to finish
+
+    # Core 1 loads all four partial sums:
+    la   x14, sum0
+    lw   x15, 0(x14)       # x15 = partial sum from core 0
+    la   x14, sum1
+    lw   x16, 0(x14)       # x16 = partial sum from core 1
+    la   x14, sum2
+    lw   x17, 0(x14)       # x17 = partial sum from core 2
+    la   x14, sum3
+    lw   x18, 0(x14)       # x18 = partial sum from core 3
+
+    # Compute the final sum:
+    add  x19, x15, x16     # x19 = sum0 + sum1
+    add  x19, x19, x17     # x19 = x19 + sum2
+    add  x19, x19, x18     # x19 = x19 + sum3
+
+    # Store the final sum:
+    la   x14, finalSum
+    sw   x19, 0(x14)
+
+finish:
+    halt                  # End simulation

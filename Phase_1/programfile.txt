@@ -1,0 +1,65 @@
+.data
+array:  .word 5, 10, 15, 20, 25
+result: .word 0
+fact:   .word 0
+temp:   .word 0       # temporary memory location for testing
+
+.text
+.globl main
+main:
+    # Initialize values
+    addi x1, x0, 10
+    addi x2, x0, 3
+    add  x3, x1, x2
+    sub  x4, x1, x2
+    mul  x5, x1, x2
+    addi x6, x0, 5
+    slt  x7, x2, x1
+
+    # Instead of using 0(x0), load a proper effective address from a label.
+    la   x20, temp    # x20 now holds the effective address for 'temp'
+    sw   x3, 0(x20)   # store x3 into the temp location (in each core’s segment)
+    lw   x8, 0(x20)   # load the value from the temp location into x8
+
+    add  x9, x0, x0
+    add  x10, x0, x0
+    addi x11, x0, 5
+    la   x12, array  # load the effective address for array
+
+sum_loop:
+    blt  x10, x11, sum_cont
+    jal  x0, sum_end
+
+sum_cont:
+    addi x14, x0, 4
+    mul  x15, x10, x14
+    add  x15, x12, x15   # calculate effective address of array[x10]
+    lw   x16, 0(x15)     # load array element
+    add  x9, x9, x16     # accumulate sum
+    addi x10, x10, 1
+    jal  x0, sum_loop
+
+sum_end:
+    la   x13, result
+    sw   x9, 0(x13)      # store the sum in the result location
+    addi x17, x0, 5
+    jal  x0, fact_sub
+
+main_continue:
+    la   x13, fact
+    sw   x18, 0(x13)     # store the factorial result in fact
+    halt
+
+fact_sub:
+    addi x18, x0, 1
+
+fact_loop:
+    addi x19, x0, 2
+    slt  x20, x17, x19
+    bne  x20, x0, fact_done
+    mul  x18, x18, x17
+    addi x17, x17, -1
+    jal  x0, fact_loop
+
+fact_done:
+    jal  x0, main_continue

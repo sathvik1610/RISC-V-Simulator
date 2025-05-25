@@ -1,0 +1,37 @@
+    #-----------------------------
+    # Registers:
+    # x0 = 0
+    # x1 = array base pointer
+    # x2 = outer loop counter (cnt)
+    # x3 = inner loop counter (i)
+    # x4 = limit (100)
+    # x5 = pointer for each load
+    # x6 = loaded value
+    # x7 = accumulator sum
+    #-----------------------------
+.text
+    addi  x1, x0, 0        # x1 ← base address of array
+    addi  x4, x0, 5     # x4 ← loop limit = 100
+    addi  x7, x0, 0        # x7 ← sum = 0
+
+    addi  x2, x0, 0        # cnt = 0 (outer)
+outer1:
+    addi  x3, x0, 0        # i = 0 (inner)
+    add   x5, x0, x1       # ptr = array base
+
+inner1:
+    lw    x6, 0(x5)        # load a[i*X]
+    add   x7, x7, x6       # sum += x6
+    addi  x3, x3, 1        # i++
+    addi  x5, x5, 400      # ptr += 400 bytes (X*4)
+    blt   x3, x4, inner1   # if i < 100, repeat inner
+
+    addi  x2, x2, 1        # cnt++
+    blt   x2, x4, outer1   # if cnt < 100, repeat outer
+
+    # final sum in x7
+    # … e.g. move to a0/x10 for exit:
+    addi  x10, x0, 0
+    add   x10, x10, x7
+    halt
+    # (then ecall or infinite loop)

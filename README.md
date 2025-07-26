@@ -277,7 +277,7 @@ For each run, the simulator generates a `pipeline_core_N.csv` file for each core
 
 ```bash
 git clone https://github.com/sathvik1610/RISC-V-Simulator
-cd RISC-V-Simulator/RISC-V-Simulator-main/Phase_3
+cd RISC-V-Simulator/RISC-V-Simulator-main/Final_Simulator
 ```
 
 ---

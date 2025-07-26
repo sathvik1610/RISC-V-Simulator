@@ -1,0 +1,8 @@
+# ninja log v6
+7	948	7752456291446907	CMakeFiles/project.dir/centralized_fetch.cpp.obj	47126a205c195ca3
+11	1028	7752456291486924	CMakeFiles/project.dir/main.cpp.obj	d40fd0b04a19f3e0
+2	1118	7752456291396885	CMakeFiles/project.dir/cache.cpp.obj	8cc005e71d895909
+15	1237	7752456291526936	CMakeFiles/project.dir/memory_hierarchy.cpp.obj	a6aeefe8bdbca99c
+22	1548	7752456291596910	CMakeFiles/project.dir/pipelined_simulator.cpp.obj	71ff897ccc10222d
+18	3250	7752456291556890	CMakeFiles/project.dir/pipelined_core.cpp.obj	1ec3839d630420c3
+3250	6115	7752456323882005	project.exe	4b69db4d8fd1fe8b

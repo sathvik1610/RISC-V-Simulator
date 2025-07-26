@@ -10,7 +10,6 @@
 
 ## Note:
 ### Simulator specific test RISC-V codes are in the project.
-### Phase 1 and Phase 2 codes are another variant of the Final Phase 3 version. They work, but don't have proper documentation.
 ---
 
 ## 1. Introduction
@@ -286,7 +285,7 @@ cd RISC-V-Simulator/RISC-V-Simulator-main/Phase_3
 ### 🧰 CLion
 
 1. Open CLion.
-2. Select `RISC-V-Simulator-main/Phase_3` as the project folder.
+2. Select `RISC-V-Simulator-main/Final_Simulator` as the project folder.
 3. CLion will auto-detect the `CMakeLists.txt` file and configure the project.
 4. Use the green ▶️ button to build and run the project.
 
@@ -294,10 +293,10 @@ cd RISC-V-Simulator/RISC-V-Simulator-main/Phase_3
 
 ### 💻 VS Code
 
-1. Open `RISC-V-Simulator-main/Phase_3` in VS Code:
+1. Open `RISC-V-Simulator-main/Final_Simulator` in VS Code:
 
    ```bash
-   code RISC-V-Simulator-main/Phase_3
+   code RISC-V-Simulator-main/Final_Simulator
    ```
 
 2. Create a build directory:

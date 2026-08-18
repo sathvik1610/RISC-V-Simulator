@@ -7,6 +7,11 @@
 
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue.svg)
 ![Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Hartbeat-0f7a94?style=for-the-badge)](https://sathvik1610.github.io/RISC-V-Simulator/)
+
+> ### Try it in your browser — no build required: **[sathvik1610.github.io/RISC-V-Simulator](https://sathvik1610.github.io/RISC-V-Simulator/)**
+>
+> Hartbeat is a self-contained web reimplementation of this simulator's pipeline, cache hierarchy, scratchpad, and multi-core sync barrier — assemble RISC-V programs, step or run them, and watch the pipeline, registers, memory, and cache stats update live.
 
 ## Note:
 ### Simulator specific test RISC-V codes are in the project.
@@ -323,5 +328,13 @@ cd RISC-V-Simulator/RISC-V-Simulator-main/Final_Simulator
    ./project      # Linux/macOS
    project.exe    # Windows
    ```
+
+---
+
+## Web UI (Hartbeat)
+
+**[sathvik1610.github.io/RISC-V-Simulator](https://sathvik1610.github.io/RISC-V-Simulator/)**
+
+`docs/index.html` is a self-contained, dependency-free HTML/JS reimplementation of this simulator that runs entirely in the browser and is hosted directly from this repo via GitHub Pages. It covers the same mechanics as the C++ engine — the 5-stage pipeline with forwarding/stalling and predict-not-taken branch flushing, the configurable L1I/L1D/L2 hierarchy with LRU or FIFO replacement, the per-core scratchpad, and the `sync`-barrier coherence model — with a live pipeline visualizer, register/memory/scratchpad viewers, cache statistics, and loadable sample programs. No installation needed; open the link above.
 
 

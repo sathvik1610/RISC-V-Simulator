@@ -7,11 +7,11 @@
 
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue.svg)
 ![Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Hartbeat-0f7a94?style=for-the-badge)](https://sathvik1610.github.io/RISC-V-Simulator/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-RVSim-0f7a94?style=for-the-badge)](https://sathvik1610.github.io/RISC-V-Simulator/)
 
 > ### Try it in your browser — no build required: **[sathvik1610.github.io/RISC-V-Simulator](https://sathvik1610.github.io/RISC-V-Simulator/)**
 >
-> Hartbeat is a self-contained web reimplementation of this simulator's pipeline, cache hierarchy, scratchpad, and multi-core sync barrier — assemble RISC-V programs, step or run them, and watch the pipeline, registers, memory, and cache stats update live.
+> RVSim is a self-contained web reimplementation of this simulator's pipeline, cache hierarchy, scratchpad, and multi-core sync barrier — assemble RISC-V programs, step or run them, and watch the pipeline, registers, memory, and cache stats update live.
 
 ## Note:
 ### Simulator specific test RISC-V codes are in the project.
@@ -331,7 +331,7 @@ cd RISC-V-Simulator/RISC-V-Simulator-main/Final_Simulator
 
 ---
 
-## Web UI (Hartbeat)
+## Web UI (RVSim)
 
 **[sathvik1610.github.io/RISC-V-Simulator](https://sathvik1610.github.io/RISC-V-Simulator/)**
 

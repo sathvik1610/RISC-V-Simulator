@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Hartbeat</title>
+<title>RVSim</title>
 <style>
 /* Palette: cyanotype blueprint. Real architectural/engineering blueprints are cyan-on-navy
    because of the 1840s cyanotype printing process — that's the literal source of this accent,
@@ -198,6 +198,10 @@ table.stats th, table.stats td{padding:6px 8px; text-align:right; border-bottom:
 table.stats th:first-child, table.stats td:first-child{text-align:left; color:var(--text-dim);}
 table.stats thead th{color:var(--text-faint); text-transform:uppercase; font-size:10px; letter-spacing:.5px; font-weight:700;}
 .hitbar{display:inline-block; height:5px; border-radius:3px; background:linear-gradient(90deg,var(--good),var(--good)); vertical-align:middle; margin-right:6px;}
+table.guide{width:100%; border-collapse:collapse; font-size:13px; min-width:560px;}
+table.guide th, table.guide td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--text-dim);}
+table.guide thead th{font-family:var(--mono); text-transform:uppercase; font-size:10px; letter-spacing:.5px; color:var(--text-faint); font-weight:700;}
+table.guide td.key{font-family:var(--mono); font-weight:700; color:var(--accent-strong); white-space:nowrap;}
 .scrollx{overflow-x:auto;}
 
 /* ---------- Log ---------- */
@@ -262,9 +266,15 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); co
   <div class="topbar">
     <div class="brand">
       <div class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#04141c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12h4l2 -7 3 14 2.5 -10 2 6h8.5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#04141c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="9" width="3.4" height="6" rx="1"/>
+          <rect x="6.4" y="6.5" width="3.4" height="11" rx="1"/>
+          <rect x="11.3" y="4.5" width="3.4" height="15" rx="1"/>
+          <rect x="16.2" y="6.5" width="3.4" height="11" rx="1"/>
+          <rect x="21.1" y="9" width="1.4" height="6" rx="0.7"/>
+        </svg>
       </div>
-      <div class="brand-text"><b>Hartbeat</b><span>N-HART · 5-STAGE · CACHED PIPELINE SIM</span></div>
+      <div class="brand-text"><b>RVSim</b><span>MULTI-CORE · 5-STAGE · CACHED</span></div>
     </div>
     <div class="tabs" role="tablist">
       <button class="tab-btn" data-tab="simulator" role="tab" aria-selected="true">Simulator</button>
@@ -410,7 +420,7 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); co
     <section class="tabpage" id="tab-architecture">
       <div class="arch-intro">
         <h2>How the machine works</h2>
-        <p>Hartbeat models a small chip: several harts (RISC-V's own word for a hardware thread — a core), each walking instructions through a five-stage pipeline, all sharing one cache hierarchy and one memory. Everything below is the actual mechanism this simulator runs — not a simplified retelling.</p>
+        <p>RVSim models a small chip: several harts (RISC-V's own word for a hardware thread — a core), each walking instructions through a five-stage pipeline, all sharing one cache hierarchy and one memory. Everything below is the actual mechanism this simulator runs — not a simplified retelling.</p>
       </div>
 
       <figure class="arch-figure">
@@ -588,6 +598,85 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); co
       </div>
 
       <div class="arch-section">
+        <h3>Registers — what each one means</h3>
+        <p>32 registers per hart, each 32 bits wide. Almost all of them are plain scratch space — the engine puts no meaning on them beyond two fixed exceptions:</p>
+        <div class="scrollx"><table class="guide">
+          <thead><tr><th>Register</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="key">x0</td><td>Hard-wired to 0. Reads always return 0; writes are silently discarded. Standard RISC-V convention, used as a "no destination" / "no source" placeholder (e.g. <span class="mono">jal x0, label</span> for an unconditional jump that discards the return address).</td></tr>
+            <tr><td class="key">x1 – x30</td><td>Ordinary general-purpose registers. Nothing in the engine assigns them a role — every sample program picks its own convention on the fly (e.g. Bubble Sort uses x1 as the array pointer and x7 as the swap accumulator purely by choice, not by rule).</td></tr>
+            <tr><td class="key">x31</td><td>Hard-wired to the current hart's own ID (0, 1, 2, …). Read-only — any attempt to write it is ignored. This is what makes <span class="mono">beq x31, &lt;id&gt;, label</span> work as a dispatch instruction: it's really asking "am I hart &lt;id&gt;?", not comparing two ordinary values.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="arch-section">
+        <h3>Scratchpad memory — how it's actually built</h3>
+        <p>Under the hood a scratchpad is nothing exotic: <span class="mono">core.spm</span> is just a plain fixed-size array (512 32-bit words here) that belongs to one hart and nothing else touches it — no tags, no sets, no ways, no eviction logic of any kind.</p>
+        <ul>
+          <li><b>Addressing is identical to normal loads/stores</b> — <span class="mono">lw_spm rd, imm(rs1)</span> and <span class="mono">sw_spm rs2, imm(rs1)</span> compute <span class="mono">address = reg[rs1] + imm</span> exactly like <span class="mono">lw</span>/<span class="mono">sw</span>; the only difference is which memory that address indexes into.</li>
+          <li><b>Every access costs exactly one fixed cycle</b> — there's no hit/miss branch in the code at all, which is the entire point: nothing can ever make it slower than normal.</li>
+          <li><b>The sync barrier never touches it.</b> Barrier release flushes/invalidates each hart's L1D cache — scratchpad contents are completely separate storage, so they survive a barrier untouched.</li>
+          <li><b>Use it for data where a surprise cache-miss stall would be worse than the inconvenience of managing the memory yourself</b> — the "Scratchpad vs Cache" sample shows the same sum computed both ways so you can compare.</li>
+        </ul>
+      </div>
+
+      <div class="arch-section">
+        <h3>Caches — how they're actually built</h3>
+        <p>Every cache (each hart's private L1I/L1D, and the shared L2) is the same generic set-associative structure, just with different size/ways/block-size numbers plugged in:</p>
+        <ul>
+          <li><b>An address splits into three parts:</b> which memory block it falls in, which <i>set</i> that block maps to (block number mod number-of-sets), and a <i>tag</i> identifying exactly which block currently sits there. Smaller size or fewer ways means fewer sets to spread addresses across, so more addresses collide into the same set — that's a conflict miss.</li>
+          <li><b>On every access</b> the engine searches only that one set for a matching tag. Found it → hit. Not found → miss, and if the set is already full, something gets evicted to make room.</li>
+          <li><b>LRU vs FIFO is just what "eviction" means:</b> both track an insertion/touch order number per line; LRU refreshes that number on every hit (so whatever hasn't been touched in the longest time gets evicted), FIFO never refreshes it on a hit (so whatever arrived first gets evicted, no matter how often it's been used since).</li>
+          <li><b>A miss falls all the way down the hierarchy</b> — an L1 miss checks L2; an L2 miss adds the full DRAM latency on top of both. That's why one unlucky load can stall everything behind it in the pipeline for dozens of cycles (see the Memory hierarchy diagram above).</li>
+          <li><b>Caches here only gate timing, not correctness</b> — the actual bytes always live in one shared memory array underneath, so a miss changes how long an access takes, never what value comes back.</li>
+        </ul>
+      </div>
+
+      <div class="arch-section">
+        <h3>The sync barrier — step by step</h3>
+        <ol class="io-steps">
+          <li><b>A hart executes <span class="mono">sync</span>.</b><span>It registers "I've arrived" and stops right there — it does nothing else until released.</span></li>
+          <li><b>It waits.</b><span>Every other still-running hart has to reach its own <span class="mono">sync</span> too. A hart that finished early just sits stalled; there's no timeout.</span></li>
+          <li><b>The instant the last hart arrives, everyone's L1D is flushed together.</b><span>Every hart's data cache is written back to L2 and then invalidated, in the same moment — not one at a time.</span></li>
+          <li><b>All harts resume.</b><span>Any load right after a sync is now guaranteed to miss its (now-empty) L1D and pull the fresh, fully-consistent value up from L2 — no hart can see another's stale cached copy anymore.</span></li>
+        </ol>
+        <p>Why it's needed: in the Parallel Array Sum sample, without <span class="mono">sync</span> hart 1 could read the other three harts' partial sums before they'd actually finished writing them — the barrier is the only thing making that final reduction step safe.</p>
+      </div>
+
+      <div class="arch-section">
+        <h3>What's novel here</h3>
+        <ul>
+          <li><b>Centralized, round-robin fetch</b> instead of every hart fetching independently — models a shared front-end resource rather than pretending fetch bandwidth is free and infinite.</li>
+          <li><b>x31 as a built-in hart ID</b> turns <span class="mono">beq x31, &lt;id&gt;, label</span> into a one-line way to hand each hart different work from a single shared program, with no dedicated "thread ID" instruction needed.</li>
+          <li><b>Software-assisted coherence</b> via the sync barrier instead of real hardware snooping (MESI) — far simpler to build and reason about, at the honest cost of only being coherent at explicit checkpoints, not continuously.</li>
+          <li><b>Scratchpad as a first-class citizen</b>, not an afterthought — same load/store syntax as normal memory, opposite timing guarantee.</li>
+          <li><b>Nothing here needs a recompile.</b> Hart count, cache geometry, replacement policy, forwarding, and per-instruction latency are all runtime controls — change one, hit Assemble, and immediately see the effect.</li>
+        </ul>
+      </div>
+
+      <div class="arch-section">
+        <h3>Quick guide — what to click and why</h3>
+        <div class="scrollx"><table class="guide">
+          <thead><tr><th>Control / panel</th><th>What it does</th><th>Try this</th></tr></thead>
+          <tbody>
+            <tr><td class="key">Cores</td><td>How many harts run the program.</td><td>Set to 4 and load "Parallel Array Sum" to see dispatch + sync in action.</td></tr>
+            <tr><td class="key">mul latency</td><td>Cycles a <span class="mono">mul</span> takes in Execute.</td><td>Raise it and watch dependent instructions stall longer in the Timeline.</td></tr>
+            <tr><td class="key">L1 / L2 size, ways, block</td><td>Cache geometry — sets, associativity, conflict potential.</td><td>Shrink L1 size on Bubble Sort and watch L1D hit rate drop in the stats table.</td></tr>
+            <tr><td class="key">DRAM latency</td><td>Cost of a full miss all the way to main memory.</td><td>Raise it and watch one load stall the whole pipeline behind it.</td></tr>
+            <tr><td class="key">Replacement policy</td><td>LRU or FIFO eviction, applied to L1 and L2.</td><td>Run the same program under both — they only diverge when a set is genuinely under pressure.</td></tr>
+            <tr><td class="key">Forwarding checkbox</td><td>Bypass values straight from Execute/Memory, or force a stall-only pipeline.</td><td>Toggle it on "Forwarding vs Stalling" and compare stall count and total cycles.</td></tr>
+            <tr><td class="key">Assemble / Step / Play / Run / Reset</td><td>Build the machine, then advance it one cycle, auto-play, jump to completion, or clear it.</td><td>Assemble first — the other buttons stay disabled until you do.</td></tr>
+            <tr><td class="key">Live Pipeline Lanes</td><td>What every hart is doing this exact cycle.</td><td>Watch a stage sit still — that's a stall or a structural hold.</td></tr>
+            <tr><td class="key">Register File / Scratchpad</td><td>One hart's 32 registers, or that hart's raw scratchpad words.</td><td>Switch the core tabs to compare harts side by side.</td></tr>
+            <tr><td class="key">Data Segment &amp; Main Memory</td><td>Your <span class="mono">.data</span> arrays' current values.</td><td>This is where to check "did it actually sort / sum correctly."</td></tr>
+            <tr><td class="key">Execution Timeline</td><td>The classic per-instruction, per-cycle stage chart.</td><td>Scroll it to trace exactly when and why something stalled or flushed.</td></tr>
+            <tr><td class="key">Execution Log</td><td>Plain-English narration of every stall-worthy event.</td><td>Read it top to bottom after a run to reconstruct the whole story.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="arch-section">
         <h3>What this web version simplifies</h3>
         <p>This tab runs a from-scratch JavaScript engine built to demonstrate the same mechanisms as the C++ reference simulator in <span class="mono">Final_Simulator/</span>, entirely in your browser — no server, no build step. One thing is intentionally simplified for clarity: every stage holds exactly one in-flight instruction rather than a multi-deep queue, and fetch bandwidth isn't separately capped beyond each core's own single fetch slot. Everything else — pipeline ordering, forwarding, stalling, predict-not-taken branch flushing, the LRU/FIFO replacement choice, the cache hierarchy, the scratchpad, and the sync-barrier coherence model — follows the same logic as the original, and every one of those is exposed as a control or a readout in the Simulator tab rather than left to run invisibly.</p>
       </div>
@@ -603,7 +692,7 @@ footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); co
     </section>
 
     <footer>
-      <span>Hartbeat — browser reimplementation of the Final_Simulator RISC-V pipeline/cache model.</span>
+      <span>RVSim — browser reimplementation of the Final_Simulator RISC-V pipeline/cache model.</span>
       <span>Runs entirely client-side. No data leaves your browser.</span>
     </footer>
   </main>
